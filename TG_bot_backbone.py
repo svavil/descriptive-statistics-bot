@@ -25,7 +25,7 @@ def get_numbered_update(request, message_id):
 
 if '__main__' == __name__:
     TOKEN = os.environ["BOT_TOKEN"]
-    url = "https://api.telegram.org/" + TOKEN + "/"
+    url = "https://api.telegram.org/bot" + TOKEN + "/"
     json = get_updates_json(url)
     next_message_number = len(json['result'])
     while(True):
