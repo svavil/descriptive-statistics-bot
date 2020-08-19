@@ -1,1 +1,1 @@
-web: python TG_bot_backbone.py
+worker: python TG_bot_backbone.py
