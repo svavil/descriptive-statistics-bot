@@ -8,7 +8,7 @@ This is a temporary script file.
 import requests
 import numpy as np
 from time import sleep
-import bot_token
+import os
 
 def get_updates_json(request):  
     response = requests.get(request + 'getUpdates')
@@ -24,6 +24,8 @@ def get_numbered_update(request, message_id):
     return float(message_text)
 
 if '__main__' == __name__:
+    TOKEN = os.environ["BOT_TOKEN"]
+    url = "https://api.telegram.org/" + TOKEN + "/"
     json = get_updates_json(url)
     next_message_number = len(json['result'])
     while(True):
