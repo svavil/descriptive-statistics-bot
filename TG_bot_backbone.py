@@ -13,6 +13,7 @@ CODE_PASS = 0
 CODE_START = 1
 CODE_CLEAR = 2
 CODE_MESSAGE = 3
+CODE_CATCHALL = 99
 
 def get_updates_json(request):  
     response = requests.get(request + 'getUpdates')
@@ -27,7 +28,11 @@ def get_numbered_update(json, message_id):
         return chat_id, CODE_START, 0
     if message_text == "/clear":
         return chat_id, CODE_CLEAR, 0
-    return chat_id, CODE_MESSAGE, float(message_text)
+    try: 
+        numeric_message = float(message_text)
+        return chat_id, CODE_MESSAGE, numeric_message
+    except ValueError:
+        return chat_id, CODE_CATCHALL, -1
 
 def describe(number_list):
     import numpy as np
@@ -61,6 +66,8 @@ if '__main__' == __name__:
             reply_text = "Array cleared"
         if message_code == CODE_START:
             reply_text = "Enter one number at a time to accumulate statistics"
+        if message_code == CODE_CATCHALL:
+            reply_text = "Message unclear"
         params = {'chat_id': chat_id, 'text': reply_text}
         print(f"Sending message: {reply_text} to chat_id: {chat_id}")
         response = requests.post(url + 'sendMessage', data = params)
