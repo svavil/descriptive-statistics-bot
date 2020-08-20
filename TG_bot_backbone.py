@@ -8,6 +8,7 @@ This is a temporary script file.
 import requests
 from time import sleep
 import os
+import sys
 
 CODE_PASS = 0
 CODE_START = 1
@@ -49,6 +50,10 @@ if '__main__' == __name__:
     json = get_updates_json(url)
     next_message_number = len(json['result'])
     statistics = {}
+    if (~json["ok"]):
+        print("An error occurred while getting updates, quitting...")
+        sys.exit(1)
+    print("Telegram bot backbone started successfully, polling for updates...")
     while(True):
         json = get_updates_json(url)
         chat_id, message_code, message_content = get_numbered_update(json, next_message_number)
