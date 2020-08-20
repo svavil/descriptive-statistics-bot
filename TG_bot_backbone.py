@@ -50,7 +50,7 @@ if '__main__' == __name__:
     json = get_updates_json(url)
     next_message_number = len(json['result'])
     statistics = {}
-    if (~json["ok"]):
+    if (not json["ok"]):
         print("An error occurred while getting updates, quitting...")
         sys.exit(1)
     print("Telegram bot backbone started successfully, polling for updates...")
