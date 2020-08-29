@@ -60,7 +60,7 @@ if '__main__' == __name__:
         if message_code == CODE_PASS:
             sleep(1)
             continue
-        if message_code == CODE_MESSAGE:
+        if message_code == CODE_MESSAGE: 
             if chat_id in statistics.keys():
                 statistics[chat_id] = statistics[chat_id] + [message_content]
             else:
@@ -70,7 +70,7 @@ if '__main__' == __name__:
             statistics[chat_id] = []
             reply_text = "Array cleared"
         if message_code == CODE_START:
-            reply_text = "Enter one number at a time to accumulate statistics"
+            reply_text = "Please enter one number at a time to accumulate statistics"
         if message_code == CODE_CATCHALL:
             reply_text = "Message unclear"
         params = {'chat_id': chat_id, 'text': reply_text}
