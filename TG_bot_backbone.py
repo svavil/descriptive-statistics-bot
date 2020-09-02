@@ -1,41 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
-
-import requests
 from time import sleep
 import os
-import sys
 
-CODE_PASS = 0
-CODE_START = 1
-CODE_CLEAR = 2
-CODE_MESSAGE = 3
-CODE_CATCHALL = 99
-
-def get_updates_json(request):  
-    response = requests.get(request + 'getUpdates')
-    return response.json()
-
-def get_numbered_update(json, message_id):
-    if (message_id >= len(json['result'])):
-        return -1, CODE_PASS, -1
-    chat_id = json["result"][message_id]["message"]["chat"]["id"]
-    message_text = json['result'][message_id]['message']['text']
-    if message_text == '/start':
-        return chat_id, CODE_START, 0
-    if message_text == "/clear":
-        return chat_id, CODE_CLEAR, 0
-    try: 
-        numeric_message = float(message_text)
-        return chat_id, CODE_MESSAGE, numeric_message
-    except ValueError:
-        return chat_id, CODE_CATCHALL, -1
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 def describe(number_list):
+    # returns a textual description of a list of numbers
     import numpy as np
     count = len(number_list)
     if (0 == count):
@@ -44,37 +13,38 @@ def describe(number_list):
     std = np.std(number_list)
     return "A list of " + str(count) + " samples with mean " + str(round(mean, 2)) + " and deviation " + str(round(std, 2))
 
-if '__main__' == __name__:
+def respond_to_message(update, context):
+    # Check what kind of message we received
+    if ((update.message.text == "/start") or (update.message.text == "/help")):
+        reply_text = "Enter numbers to accumulate statistics, or /clear to start from an empty array"
+    elif (update.message.text == "/clear"):
+        context.chat_data.clear()
+        reply_text = "Array cleared"
+    else:
+        try: 
+            numeric_message = float(update.message.text)
+            try:
+                context.chat_data.update({"statistics": context.chat_data["statistics"] + [numeric_message]})
+            except KeyError:
+                context.chat_data.update({"statistics": [numeric_message]})
+        except ValueError:
+            reply_text = "This was not a number. Enter numbers to accumulate statistics"
+        reply_text = describe(context.chat_data["statistics"])
+    update.message.reply_text(reply_text)
+
+def respond_to_message_template(update, context):
+    if ((update.message.text == "/start") or (update.message.text == "/help")):
+        reply_text = "О каком вопросе вы сейчас думаете?"
+    else:
+        reply_text = "Пока я не знаю, что вам ответить"
+        ### Здесь должен быть код, который пользуется переменными update.message.text и context.chat_data
+        ### и формирует переменную reply_text
+    update.message.reply_text(reply_text)
+
+if "__main__" == __name__:
     TOKEN = os.environ["BOT_TOKEN"]
-    url = "https://api.telegram.org/bot" + TOKEN + "/"
-    json = get_updates_json(url)
-    next_message_number = len(json['result'])
-    statistics = {}
-    if (not json["ok"]):
-        print("An error occurred while getting updates, quitting...")
-        sys.exit(1)
-    print("Telegram bot backbone started successfully, polling for updates...")
-    while(True):
-        json = get_updates_json(url)
-        chat_id, message_code, message_content = get_numbered_update(json, next_message_number)
-        if message_code == CODE_PASS:
-            sleep(1)
-            continue
-        if message_code == CODE_MESSAGE: 
-            if chat_id in statistics.keys():
-                statistics[chat_id] = statistics[chat_id] + [message_content]
-            else:
-                statistics[chat_id] = [message_content]
-            reply_text = describe(statistics[chat_id])
-        if message_code == CODE_CLEAR:
-            statistics[chat_id] = []
-            reply_text = "Array cleared"
-        if message_code == CODE_START:
-            reply_text = "Please enter one number at a time to accumulate statistics"
-        if message_code == CODE_CATCHALL:
-            reply_text = "Message unclear"
-        params = {'chat_id': chat_id, 'text': reply_text}
-        print(f"Sending message: {reply_text} to chat_id: {chat_id}")
-        response = requests.post(url + 'sendMessage', data = params)
-        print(response)
-        next_message_number += 1
+    updater = Updater(TOKEN, use_context = True)
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, respond_to_message))
+    updater.start_polling()
+    print("Telegram bot backbone, polling started...")
+    updater.idle()
