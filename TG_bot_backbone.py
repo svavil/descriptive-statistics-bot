@@ -48,3 +48,4 @@ if "__main__" == __name__:
     updater.start_polling()
     print("Telegram bot backbone, polling started...")
     updater.idle()
+    
